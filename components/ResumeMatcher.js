@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { UploadCloud, Sparkles, Loader2, FileUp, X, Plus, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { UploadCloud, Sparkles, Loader2, FileUp, X, Plus, CheckCircle2, AlertTriangle, Camera } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { parseResume, evaluate, SKILLS } from '@/lib/logic';
 import { extractResumeText } from '@/lib/extractText';
-import { Card, Title, Badge, Empty, inp, statusTone } from './ui';
+import { aiConfigured, parseResumeWithAI, mergeAiProfile } from '@/lib/aiParse';
+import { Card, Title, Badge, Empty, inp } from './ui';
 
 const MIN_CHARS = 30;
 const ACCEPT = '.pdf,.txt,.text,.md,.markdown,.rtf,.csv';
@@ -16,19 +17,31 @@ export default function ResumeMatcher() {
   const [err, setErr] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [busyLabel, setBusyLabel] = useState('');
   const [newSkill, setNewSkill] = useState('');
+  const [camOpen, setCamOpen] = useState(false);
+  const [camErr, setCamErr] = useState('');
+  const [shot, setShot] = useState(''); // last camera capture, shown as a thumbnail
   const fileRef = useRef(null);
-  const sigRef = useRef(null); // signature of the last auto-parsed profile
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const sigRef = useRef(null);   // signature of the last auto-parsed profile
+  const aiTextRef = useRef(null); // exact text the AI transcribed (don't re-parse over it)
 
   // Live parse: every text change (typing or file load) is pushed into the global
   // context, so the Company Matcher table re-scores immediately. Debounced so we
-  // do not re-parse on every keystroke.
+  // do not re-parse on every keystroke. Text that came straight from the AI is
+  // left alone until the student edits it.
   useEffect(() => {
+    if (aiTextRef.current === text) return;
     if (text.trim().length < MIN_CHARS) return;
     const t = setTimeout(() => apply(parseResume(text), false), 300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text]);
+
+  // Stop the camera when the component goes away.
+  useEffect(() => () => stopCam(), []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   function apply(parsed, force) {
     const sig = JSON.stringify(parsed);
@@ -40,20 +53,90 @@ export default function ResumeMatcher() {
 
   async function onFile(f) {
     if (!f) return;
-    setErr(''); setNote(''); setBusy(true);
+    setErr(''); setNote(''); setBusy(true); setBusyLabel('Extracting text from your file…');
     try {
       const { text: extracted, source } = await extractResumeText(f);
       if (extracted.trim().length < MIN_CHARS) {
-        throw new Error(`Too little text in "${source}" to parse. If it is a scanned PDF, paste the text below instead.`);
+        throw new Error(`Too little text in "${source}" to parse. If it is a scanned PDF, paste the text below or scan it with your camera.`);
       }
+      aiTextRef.current = null;
       setText(extracted);           // kicks off the live parse via the effect above
       apply(parseResume(extracted), true);
       setNote(`Loaded ${source} — ${extracted.length.toLocaleString()} characters extracted in your browser.`);
     } catch (e) {
       setErr(e?.message || 'Could not read that file.');
     } finally {
-      setBusy(false);
+      setBusy(false); setBusyLabel('');
       if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  /* ---------------- camera → AI ---------------- */
+
+  function stopCam() {
+    streamRef.current?.getTracks?.().forEach((t) => t.stop());
+    streamRef.current = null;
+  }
+
+  async function openCamera() {
+    setErr(''); setNote(''); setCamErr('');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setErr('This browser cannot open the camera (it needs HTTPS or localhost). Upload a photo with “Browse files” instead.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 } }, audio: false,
+      });
+      streamRef.current = stream;
+      setCamOpen(true);
+    } catch (e) {
+      setErr(e?.name === 'NotAllowedError'
+        ? 'Camera permission was denied — allow camera access in your browser and try again.'
+        : `Could not start the camera: ${e?.message || 'unknown error'}.`);
+    }
+  }
+
+  function closeCamera() {
+    setCamOpen(false); setCamErr('');
+    stopCam();
+  }
+
+  function capture() {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) { setCamErr('The camera is still starting — give it a second and capture again.'); return; }
+    const scale = Math.min(1, 1600 / v.videoWidth);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(v.videoWidth * scale);
+    canvas.height = Math.round(v.videoHeight * scale);
+    canvas.getContext('2d').drawImage(v, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    closeCamera();
+    runAiParse(dataUrl);
+  }
+
+  async function runAiParse(dataUrl) {
+    setShot(dataUrl);
+    setBusy(true); setBusyLabel('Reading your photo with the AI…');
+    setErr(''); setNote('');
+    try {
+      const b64 = dataUrl.slice(dataUrl.indexOf(',') + 1);
+      const ai = await parseResumeWithAI({ imageBase64: b64, mimeType: 'image/jpeg' });
+      const parsed = mergeAiProfile(ai);
+      if (ai.rawText && ai.rawText.trim().length >= MIN_CHARS) {
+        aiTextRef.current = ai.rawText;
+        setText(ai.rawText);   // shows the transcription; the effect won't overwrite the AI profile
+      }
+      apply(parsed, true);
+      const bits = [];
+      if (parsed.cgpa != null) bits.push(`CGPA ${parsed.cgpa}`);
+      if (parsed.branch) bits.push(parsed.branch);
+      bits.push(`${parsed.skills.length} skill${parsed.skills.length === 1 ? '' : 's'}`);
+      setNote(`AI read your photo — ${bits.join(' · ')}${ai.rawText ? ` · ${ai.rawText.length.toLocaleString()} characters transcribed` : ''}.`);
+    } catch (e) {
+      setErr(e?.message || 'The AI could not read that photo.');
+    } finally {
+      setBusy(false); setBusyLabel('');
     }
   }
 
@@ -63,6 +146,7 @@ export default function ResumeMatcher() {
   };
   const parseNow = () => {
     if (text.trim().length < MIN_CHARS) return setErr('Paste or upload more resume text (at least a few lines).');
+    aiTextRef.current = null;
     apply(parseResume(text), true);
     setNote('Profile updated from the text below.');
   };
@@ -80,20 +164,29 @@ export default function ResumeMatcher() {
 
   return (
     <>
-      <Title t="Resume Parser & Matcher" s="Drop a .pdf or .txt resume (or paste the text). CGPA, branch and skills are extracted in your browser and pushed straight into the Company Matcher." />
+      <Title t="Resume Parser & Matcher" s="Drop a .pdf or .txt resume, paste the text, or scan a printed resume with your camera — CGPA, branch and skills are extracted (AI-assisted when scanning) and pushed straight into the Company Matcher." />
 
       <Card className="p-5 mb-6 space-y-4">
         <div onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={onDrop}
           className={`border-2 border-dashed rounded-xl py-8 text-center text-sm transition-colors ${drag ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 text-slate-500'}`}>
           {busy ? <Loader2 className="mx-auto mb-2 text-indigo-500 animate-spin" /> : <UploadCloud className="mx-auto mb-2 text-slate-400" />}
-          {busy ? 'Extracting text from your file…' : 'Drop a .pdf or .txt resume here, or paste it below'}
+          {busy ? (busyLabel || 'Working…') : 'Drop a .pdf or .txt resume here, take a photo of a printed one, or paste it below'}
           <div className="mt-3">
             <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}
               className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50">
               <FileUp size={16} />Browse files
             </button>
             <span className="text-slate-300 mx-2">·</span>
-            <span className="text-xs text-slate-400">PDF is parsed with pdf.js, entirely on your machine</span>
+            <button type="button" onClick={openCamera} disabled={busy}
+              className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50">
+              <Camera size={16} />Scan with camera
+            </button>
+            <p className="mt-2 text-xs text-slate-400">PDF and text files are parsed on your machine; camera scans are read by the AI.</p>
+            {!aiConfigured() && (
+              <p className="mt-1 text-xs text-amber-600">
+                Camera scanning needs an API key: set <code className="bg-amber-50 px-1 rounded">NEXT_PUBLIC_GEMINI_API_KEY</code> in <code className="bg-amber-50 px-1 rounded">.env.local</code> and restart the dev server.
+              </p>
+            )}
           </div>
           <input ref={fileRef} type="file" accept={ACCEPT} className="hidden"
             onChange={(e) => onFile(e.target.files?.[0])} />
@@ -102,7 +195,12 @@ export default function ResumeMatcher() {
         <textarea className={inp + ' h-40 font-mono'} value={text} onChange={(e) => setText(e.target.value)}
           placeholder={'Asha Rao\nB.Tech Computer Science, CGPA: 8.2/10\nSkills: React, Node.js, Python, SQL, Git'} />
 
-        {note && <p className="text-sm text-emerald-600 flex items-center gap-1.5"><CheckCircle2 size={14} />{note}</p>}
+        {(note || shot) && (
+          <div className="flex items-center gap-3">
+            {shot && <img src={shot} alt="Captured resume" className="h-16 w-12 object-cover rounded border border-slate-200 bg-slate-50" />}
+            {note && <p className="text-sm text-emerald-600 flex items-center gap-1.5"><CheckCircle2 size={14} />{note}</p>}
+          </div>
+        )}
         {err && <p className="text-sm text-red-600 flex items-center gap-1.5"><AlertTriangle size={14} />{err}</p>}
 
         <div className="flex items-center gap-3">
@@ -158,12 +256,33 @@ export default function ResumeMatcher() {
                     ? <span className="flex flex-wrap gap-1">{e.missing.map((s) => <Badge key={s} tone="red">{s}</Badge>)}</span>
                     : <span className="text-xs text-emerald-600 inline-flex items-center gap-1"><CheckCircle2 size={13} />None</span>}</td>
                   <td className="px-5 py-3">
-                    <Badge tone={statusTone[e.status]}>{e.status}</Badge>
+                    <Badge tone={e.eligible ? 'green' : 'red'}>{e.eligible ? 'Eligible' : 'Ineligible'}</Badge>
                     <p className="text-xs text-slate-400 mt-1 max-w-[16rem] whitespace-normal">{e.reason}</p>
                   </td>
                 </tr>))}</tbody></table>)}
         </Card>
       </>)}
+
+      {camOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" role="dialog" aria-modal="true" aria-label="Scan resume with camera">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm">Scan a printed resume</h3>
+              <button type="button" onClick={closeCamera} aria-label="Close camera" className="text-slate-400 hover:text-slate-700"><X size={18} /></button>
+            </div>
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-64 rounded-xl bg-black object-cover" />
+            {camErr && <p className="text-sm text-red-600 flex items-center gap-1.5"><AlertTriangle size={14} />{camErr}</p>}
+            <p className="text-xs text-slate-500">Fill the frame with the page, hold steady in good light, then capture. The photo is sent to the AI, which transcribes it and fills your profile.</p>
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" onClick={closeCamera} className="text-sm px-3 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50">Cancel</button>
+              <button type="button" onClick={capture}
+                className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Camera size={16} />Capture &amp; parse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
