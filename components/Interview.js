@@ -1,29 +1,40 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Card, Title, Badge, Empty, inp } from './ui';
-import { Lightbulb, Eye, Timer, Clock, Check, Mic, MicOff, Send, RefreshCw, BarChart3, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Card, Title, Badge, NoCompanies, inp } from './ui';
+import { Mic, MicOff, Send, RefreshCw, BarChart3, AlertTriangle, TrendingUp, Volume2, ChevronRight, Building2 } from 'lucide-react';
 
-const API = 'http://localhost:3001';
+// The mock-interview backend is a separate Node process (`npm run backend`), so it has its
+// own port and its own deployment. Hardcoding localhost made this tab silently useless
+// anywhere else — a phone on the same wifi, or any deployed build. Override per environment.
+const API = (process.env.NEXT_PUBLIC_INTERVIEW_API || 'http://localhost:3001').replace(/\/$/, '');
+
+// speechSynthesis is not universal (it is absent on some Android WebViews and in headless
+// browsers), and a bare `speechSynthesis.cancel()` there is a TypeError, not a no-op.
+const tts = typeof window !== 'undefined' ? window.speechSynthesis : null;
 
 export default function Interview() {
   const { companies, profile } = useApp();
   const [id, setId] = useState('');
   const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [answers, setAnswers] = useState({});
-  const [evaluations, setEvaluations] = useState({});
+  const [answers, setAnswers] = useState([]);
+  const [currentEval, setCurrentEval] = useState(null);
   const [summary, setSummary] = useState(null);
-  const [recording, setRecording] = useState(null);
-  const [practiceMode, setPracticeMode] = useState(false);
-  const [timer, setTimer] = useState(0);
   const [mode, setMode] = useState('baseline');
+  const [baselineSummary, setBaselineSummary] = useState(null);
+  const [showReport, setShowReport] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
+  const [followupMode, setFollowupMode] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
 
   const c = companies.find((x) => x.id === id) || companies[0];
 
-  // Build student profile from AppContext profile or use defaults
   const student = profile || {
     name: 'Student',
     branch: 'CSE',
@@ -35,7 +46,6 @@ export default function Interview() {
     skillGaps: [],
   };
 
-  // Map frontend company to backend company format
   const company = c ? {
     name: c.name,
     role: c.role,
@@ -44,24 +54,38 @@ export default function Interview() {
     requiredSkills: c.skills || [],
   } : null;
 
+  // Load baseline from localStorage.
+  // try/catch matters here: this runs inside an effect, so one corrupt value throws with no
+  // error boundary above it and the whole app white-screens. Dropping the bad value and
+  // carrying on is strictly better than a dead page.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('baselineSummary');
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      if (!parsed || typeof parsed !== 'object') throw new Error('unexpected shape');
+      setBaselineSummary(parsed);
+      setMode('final');
+    } catch {
+      try { localStorage.removeItem('baselineSummary'); } catch { /* ignore */ }
+    }
+  }, []);
+
   const generateQuestions = async () => {
     if (!c) return;
     setLoading(true);
     setError('');
+    setAnswers([]);
+    setCurrentIndex(0);
+    setCurrentEval(null);
     setSummary(null);
-    setEvaluations({});
-    setAnswers({});
+    setShowReport(false);
+    setFollowupMode(false);
     try {
       const res = await fetch(`${API}/api/mock/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode,
-          student,
-          company,
-          count: 5,
-          useSearch: false,
-        }),
+        body: JSON.stringify({ mode, student, company, baseline: baselineSummary, count: 5, useSearch: false }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -73,234 +97,366 @@ export default function Interview() {
     }
   };
 
-  const evaluateAnswer = async (question, answerText) => {
-    if (!answerText?.trim()) return;
+  const speakQuestion = (text) => {
+    if (!text || !tts || typeof SpeechSynthesisUtterance === 'undefined') return;
+    tts.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95;
+    tts.speak(u);
+  };
+
+  const startRecording = async () => {
     try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => chunksRef.current.push(e.data);
+      mr.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType });
+        stream.getTracks().forEach((t) => t.stop());
+        await sendForEvaluation(blob);
+      };
+      mr.start();
+      setRecording(true);
+    } catch {
+      setError('Microphone blocked. Please allow microphone access and try again.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+    }
+  };
+
+  const sendForEvaluation = async (blob) => {
+    setEvaluating(true);
+    setError('');
+    try {
+      const base64 = await blobToBase64(blob);
+      const mimeType = blob.type.split(';')[0];
+      const q = followupMode
+        ? { question: currentEval.followUp, topic: currentEval.weakTopic, idealPoints: [] }
+        : questions[currentIndex];
       const res = await fetch(`${API}/api/mock/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, textAnswer: answerText }),
+        body: JSON.stringify({ question: q, audioBase64: base64, mimeType }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setEvaluations((prev) => ({ ...prev, [question.question]: data }));
-      return data;
+      if (followupMode) {
+        setAnswers((prev) => [...prev, { ...data, question: currentEval.followUp, topic: currentEval.weakTopic }]);
+        setFollowupMode(false);
+      } else {
+        setAnswers((prev) => [...prev, { ...data, question: q.question, topic: q.topic }]);
+      }
+      setCurrentEval(data);
     } catch (e) {
-      console.error('Evaluate error:', e);
+      setError(e.message || 'Evaluation failed.');
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
+  const blobToBase64 = (blob) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+
+  const nextQuestion = () => {
+    setCurrentEval(null);
+    setFollowupMode(false);
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((i) => i + 1);
+    } else {
+      generateSummary();
     }
   };
 
   const generateSummary = async () => {
-    const allAnswers = Object.values(evaluations);
-    if (!allAnswers.length) return;
+    setLoading(true);
     try {
       const res = await fetch(`${API}/api/mock/summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: allAnswers }),
+        body: JSON.stringify({ answers, baselineSummary: mode === 'final' ? baselineSummary : null }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      if (mode === 'baseline') {
+        localStorage.setItem('baselineSummary', JSON.stringify(data));
+        setBaselineSummary(data);
+      }
       setSummary(data);
+      setShowReport(true);
     } catch (e) {
-      console.error('Summary error:', e);
+      setError(e.message || 'Failed to generate summary.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Auto-generate questions when company changes
-  useEffect(() => {
-    if (c && questions.length === 0) {
-      generateQuestions();
-    }
-  }, [c?.id]);
-
-  // Practice mode timer
-  useEffect(() => {
-    if (practiceMode) {
-      const timerId = setTimeout(() => {
-        setTimer((t) => t + 1);
-      }, 5000);
-      return () => clearTimeout(timerId);
-    }
-  }, [practiceMode]);
+  const resetInterview = () => {
+    setShowReport(false);
+    setSummary(null);
+    setAnswers([]);
+    setCurrentIndex(0);
+    setCurrentEval(null);
+    setMode('baseline');
+    setFollowupMode(false);
+    tts?.cancel();
+  };
 
   if (!companies.length) {
     return (
-      <><Title t="Mock Interview Prep" s="" /><Card><Empty text="Add a company first in Admin Data Feed." /></Card></>
+      <>
+        <Title t="Mock Interview Prep" s="" />
+        <NoCompanies what="a mock interview" icon={Building2} />
+      </>
     );
   }
 
+  // Report view
+  if (showReport && summary) {
+    return (
+      <>
+        <Title t="Interview Report" s="Your readiness summary for this mock round." />
+        <Card className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <ReportItem label="Overall" value={summary.overall} />
+            <ReportItem label="Correctness" value={summary.correctness} />
+            <ReportItem label="Depth" value={summary.depth} />
+            <ReportItem label="Communication" value={summary.communication} />
+          </div>
+
+          {summary.topicScores && Object.keys(summary.topicScores).length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-slate-700 mb-2">Topic Scores</h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(summary.topicScores).map(([topic, score]) => (
+                  <Badge key={topic} tone={score >= 4 ? 'green' : score >= 3 ? 'amber' : 'red'}>
+                    {topic}: {score}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {summary.weakTopics?.length > 0 && (
+            <div className="p-3 bg-amber-50 rounded-lg mb-4">
+              <h3 className="text-sm font-medium text-amber-800 mb-1">Weak Topics</h3>
+              <div className="flex flex-wrap gap-2">
+                {summary.weakTopics.map((t) => <Badge key={t} tone="amber">{t}</Badge>)}
+              </div>
+            </div>
+          )}
+
+          {mode === 'final' && summary.delta !== undefined && (
+            <div className={`p-4 rounded-lg mb-4 ${summary.delta >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
+              <h3 className="text-sm font-medium mb-1">
+                Improvement from baseline: {summary.delta >= 0 ? '+' : ''}{summary.delta} points
+              </h3>
+              {summary.topicDeltas && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Object.entries(summary.topicDeltas).map(([t, d]) => (
+                    <Badge key={t} tone={d >= 0 ? 'green' : 'red'}>{t}: {d >= 0 ? '+' : ''}{d}</Badge>
+                  ))}
+                </div>
+              )}
+              {summary.stillWeak?.length > 0 && (
+                <p className="text-sm mt-2 text-slate-600">Still weak: {summary.stillWeak.join(', ')}</p>
+              )}
+            </div>
+          )}
+
+          <p className="text-xs text-slate-500 italic mb-4">Weak topics should feed the roadmap generator for focused preparation.</p>
+          <button onClick={resetInterview} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+            <RefreshCw size={14} /> Start New Interview
+          </button>
+        </Card>
+      </>
+    );
+  }
+
+  const q = questions[currentIndex];
+
   return (
     <>
-      <Title
-        t="Mock Interview Prep"
-        s="AI-powered mock interviews tailored to your target company. Answer out loud or type your response."
-      />
+      <Title t="Voice Mock Interview" s="AI-powered spoken mock interviews tailored to your target company." />
 
       {/* Controls */}
-      <Card className="p-5 mb-6 flex flex-wrap items-center gap-3">
-        <select
-          className={inp + ' max-w-xs'}
-          value={c.id}
-          onChange={(e) => {
-            setId(e.target.value);
-            setQuestions([]);
-            setSummary(null);
-            setEvaluations({});
-            setAnswers({});
-          }}
-        >
-          {companies.map((x) => (
-            <option key={x.id} value={x.id}>
-              {x.name} - {x.role}
-            </option>
-          ))}
-        </select>
-        <span className="text-sm text-slate-500">
-          Role: <b className="text-slate-800">{c.role}</b>
-        </span>
-        <div className="flex items-center gap-2 ml-auto">
+      <Card className="p-5 mb-6">
+        <div className="flex flex-wrap items-center gap-3">
           <select
-            className={inp + ' max-w-[140px]'}
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
+            className={inp + ' max-w-xs'}
+            value={c.id}
+            onChange={(e) => { setId(e.target.value); setQuestions([]); setShowReport(false); }}
           >
-            <option value="baseline">Baseline</option>
-            <option value="final">Final</option>
+            {companies.map((x) => (
+              <option key={x.id} value={x.id}>{x.name} - {x.role}</option>
+            ))}
           </select>
-          <button
-            onClick={generateQuestions}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            {loading ? 'Generating...' : 'New Questions'}
-          </button>
+          <span className="text-sm text-slate-500">Role: <b className="text-slate-800">{c.role}</b></span>
+          <div className="flex items-center gap-2 ml-auto">
+            <select
+              className={inp + ' max-w-[160px]'}
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+            >
+              {/* "Final" is only meaningful after a baseline run. The guard lives on the
+                  <option> below — a previous version also put a `disabled={… e.target.value …}`
+                  on this <select>, where `e` is out of scope. That threw a ReferenceError on
+                  every render, and with no error boundary above it the entire app went blank
+                  the moment this tab was opened. */}
+              <option value="baseline">Baseline (start of prep)</option>
+              <option value="final" disabled={!baselineSummary}>Final (day before)</option>
+            </select>
+            <button
+              onClick={generateQuestions}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              {loading ? 'Generating...' : 'Start Interview'}
+            </button>
+          </div>
         </div>
+        {mode === 'final' && baselineSummary && (
+          <p className="text-xs text-slate-500 mt-2">Final mode: focusing on your weak topics from baseline.</p>
+        )}
       </Card>
 
-      {/* Practice Mode Toggle */}
-      <Card className="p-4 mb-6 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={practiceMode}
-            onChange={(e) => setPracticeMode(e.target.checked)}
-            className="rounded border-indigo-600 w-4 h-4 focus:ring-indigo-500"
-          />
-          <span className="text-sm text-slate-700">
-            Practice Mode{' '}
-            <Badge tone="indigo">{practiceMode ? 'ON' : 'OFF'}</Badge>
-          </span>
-          {practiceMode && (
-            <span className="text-xs text-amber-600">
-              Timer: {timer}s remaining
-            </span>
-          )}
-        </div>
-      </Card>
-
-      {/* Error */}
       {error && (
         <Card className="p-4 mb-6 border-red-200 bg-red-50">
           <div className="flex items-center gap-2 text-red-700">
-            <AlertTriangle size={16} />
-            <span className="text-sm">{error}</span>
+            <AlertTriangle size={16} /><span className="text-sm">{error}</span>
           </div>
         </Card>
       )}
 
-      {/* Loading */}
       {loading && (
         <Card className="p-8 mb-6 text-center">
           <div className="animate-pulse space-y-3">
             <div className="h-4 bg-slate-200 rounded w-3/4 mx-auto"></div>
             <div className="h-4 bg-slate-200 rounded w-1/2 mx-auto"></div>
-            <div className="h-4 bg-slate-200 rounded w-2/3 mx-auto"></div>
           </div>
           <p className="text-sm text-slate-500 mt-4">Generating personalized questions...</p>
         </Card>
       )}
 
-      {/* Questions */}
-      {!loading && questions.length > 0 && (
-        <div className="space-y-6">
-          {questions.map((q, i) => (
-            <QuestionCard
-              key={q.question}
-              question={q}
-              index={i}
-              answer={answers[q.question] || ''}
-              evaluation={evaluations[q.question]}
-              isPracticeMode={practiceMode}
-              timer={timer}
-              onAnswerChange={(text) => setAnswers((prev) => ({ ...prev, [q.question]: text }))}
-              onEvaluate={() => evaluateAnswer(q, answers[q.question])}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Summary Section */}
-      {!loading && Object.keys(evaluations).length > 0 && (
-        <Card className="p-5 mt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-              <BarChart3 size={18} className="text-indigo-600" />
-              Interview Summary
-            </h3>
-            <button
-              onClick={generateSummary}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
-            >
-              <TrendingUp size={14} />
-              Generate Summary
-            </button>
+      {/* Question Card */}
+      {!loading && q && (
+        <Card className="p-6">
+          <div className="flex items-start gap-2 flex-wrap mb-3">
+            <Badge tone="slate">Question {currentIndex + 1} of {questions.length}</Badge>
+            <Badge tone="indigo">{q.topic}</Badge>
+            {q.source === 'campus' && <Badge tone="amber">Asked at SRM AP</Badge>}
           </div>
 
-          {summary ? (
-            <div className="space-y-4">
-              {/* Overall Score */}
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-indigo-600">{summary.overall}</div>
-                  <div className="text-xs text-slate-500">Overall</div>
-                </div>
-                <div className="flex-1 grid grid-cols-3 gap-3">
-                  <ScorePill label="Correctness" value={summary.correctness} />
-                  <ScorePill label="Depth" value={summary.depth} />
-                  <ScorePill label="Communication" value={summary.communication} />
-                </div>
+          <p className="text-lg font-medium text-slate-800 mb-4">{q.question}</p>
+
+          <button
+            onClick={() => speakQuestion(q.question)}
+            className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 mb-4"
+          >
+            <Volume2 size={16} /> Hear it again
+          </button>
+
+          {/* Recording */}
+          {!currentEval && (
+            <div className="space-y-3">
+              <button
+                onClick={recording ? stopRecording : startRecording}
+                disabled={evaluating}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  recording ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-700 text-white hover:bg-slate-800'
+                }`}
+              >
+                {recording ? <MicOff size={16} /> : <Mic size={16} />}
+                {recording ? 'Stop Recording' : 'Tap to record your answer'}
+              </button>
+              {evaluating && <p className="text-sm text-slate-500 text-center">Transcribing and evaluating...</p>}
+            </div>
+          )}
+
+          {/* Feedback */}
+          {currentEval && (
+            <div className="border-t pt-4 space-y-3">
+              <div className="flex items-center gap-4 flex-wrap">
+                <ScorePill label="Correctness" value={currentEval.correctness} />
+                <ScorePill label="Depth" value={currentEval.depth} />
+                <ScorePill label="Communication" value={currentEval.communication} />
               </div>
 
-              {/* Topic Scores */}
-              {summary.topicScores && Object.keys(summary.topicScores).length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">Topic Breakdown</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(summary.topicScores).map(([topic, score]) => (
-                      <Badge key={topic} tone={score >= 4 ? 'green' : score >= 3 ? 'amber' : 'red'}>
-                        {topic}: {score}
-                      </Badge>
-                    ))}
-                  </div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <span className="text-xs font-medium text-slate-500 uppercase">What we heard</span>
+                <p className="text-sm text-slate-700 mt-1">{currentEval.transcript || '(nothing detected)'}</p>
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <span className="text-xs font-medium text-blue-600 uppercase">Feedback</span>
+                <p className="text-sm text-blue-800 mt-1">{currentEval.feedback}</p>
+              </div>
+
+              {currentEval.missed?.length > 0 && (
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <span className="text-xs font-medium text-red-600 uppercase">Missed Points</span>
+                  <ul className="list-disc list-inside text-sm text-red-800 mt-1">
+                    {currentEval.missed.map((m, i) => <li key={i}>{m}</li>)}
+                  </ul>
                 </div>
               )}
 
-              {/* Weak Topics */}
-              {summary.weakTopics?.length > 0 && (
-                <div className="p-3 bg-amber-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-amber-800 mb-1">Weak Topics to Improve</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {summary.weakTopics.map((t) => (
-                      <Badge key={t} tone="amber">{t}</Badge>
-                    ))}
-                  </div>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <span className="text-xs font-medium text-slate-500 uppercase">Model Answer</span>
+                <p className="text-sm text-slate-700 mt-1">{currentEval.modelAnswer}</p>
+              </div>
+
+              {currentEval.followUp && !followupMode && (
+                <div className="p-3 bg-purple-50 rounded-lg">
+                  <span className="text-xs font-medium text-purple-600 uppercase">Follow-up Question</span>
+                  <p className="text-sm text-purple-800 mt-1">{currentEval.followUp}</p>
+                  <button
+                    onClick={() => setFollowupMode(true)}
+                    className="mt-2 flex items-center gap-1 text-sm text-purple-700 hover:text-purple-900"
+                  >
+                    <Mic size={14} /> Answer the follow-up
+                  </button>
                 </div>
               )}
+
+              {followupMode && (
+                <div className="space-y-2">
+                  <button
+                    onClick={recording ? stopRecording : startRecording}
+                    disabled={evaluating}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                      recording ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-700 text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    {recording ? <MicOff size={16} /> : <Mic size={16} />}
+                    {recording ? 'Stop Recording' : 'Record follow-up answer'}
+                  </button>
+                  {evaluating && <p className="text-sm text-slate-500 text-center">Evaluating follow-up...</p>}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={nextQuestion}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  {currentIndex < questions.length - 1 ? 'Next question' : 'See results'}
+                  <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-slate-500">Answer some questions and click "Generate Summary" to see your readiness report.</p>
           )}
         </Card>
       )}
@@ -308,168 +464,15 @@ export default function Interview() {
   );
 }
 
-/** ************ QuestionCard Component ************ */
-function QuestionCard({
-  question,
-  index,
-  answer,
-  evaluation,
-  isPracticeMode,
-  timer,
-  onAnswerChange,
-  onEvaluate,
-}) {
-  const [expandedHint, setExpandedHint] = useState(false);
-  const [expandedAnswer, setExpandedAnswer] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-
-  const shouldShowAnswer = !isPracticeMode || timer >= 5;
-
-  const getDifficultyColor = (difficulty) => {
-    if (difficulty <= 2) return 'green';
-    if (difficulty <= 3) return 'amber';
-    return 'red';
-  };
-
-  const getSourceColor = (source) => {
-    switch (source) {
-      case 'resume': return 'blue';
-      case 'campus': return 'purple';
-      case 'gap': return 'orange';
-      case 'role': return 'indigo';
-      default: return 'slate';
-    }
-  };
-
+function ReportItem({ label, value }) {
   return (
-    <Card className="p-4">
-      <div className="flex flex-col gap-3">
-        {/* Question header */}
-        <div className="flex items-start gap-2 flex-wrap">
-          <Badge tone="slate">Q{index + 1}</Badge>
-          <Badge tone={getDifficultyColor(question.difficulty)}>
-            {question.difficulty <= 2 ? 'Easy' : question.difficulty <= 3 ? 'Medium' : 'Hard'}
-          </Badge>
-          <Badge tone={getSourceColor(question.source)}>
-            {question.source}
-          </Badge>
-          <Badge tone="slate">{question.topic}</Badge>
-        </div>
-
-        {/* Question text */}
-        <p className="text-sm font-medium text-slate-800">{question.question}</p>
-
-        {/* Ideal Points / Hint */}
-        <details
-          onClick={(e) => e.stopPropagation()}
-          className="cursor-pointer"
-        >
-          <summary>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-amber-600 font-medium">
-                Key Concepts / Ideal Points
-              </span>
-              <Lightbulb size={16} />
-            </div>
-          </summary>
-          {expandedHint && (
-            <div className="mt-2 text-sm text-amber-800 bg-amber-50 rounded-lg p-3">
-              <ul className="list-disc list-inside space-y-1">
-                {(question.idealPoints || []).map((point, i) => (
-                  <li key={i}>{point}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </details>
-
-        {/* Answer Input */}
-        <div className="space-y-2">
-          <label className="text-sm text-slate-600 font-medium">Your Answer</label>
-          <textarea
-            className={inp + ' w-full h-24 resize-none'}
-            placeholder="Type your answer here (or use voice recording)..."
-            value={answer}
-            onChange={(e) => onAnswerChange(e.target.value)}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onEvaluate}
-              disabled={!answer.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              <Send size={14} />
-              Submit Answer
-            </button>
-          </div>
-        </div>
-
-        {/* Evaluation Result */}
-        {evaluation && (
-          <div className="border-t pt-3 space-y-3">
-            {/* Scores */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <ScorePill label="Correctness" value={evaluation.correctness} />
-              <ScorePill label="Depth" value={evaluation.depth} />
-              <ScorePill label="Communication" value={evaluation.communication} />
-            </div>
-
-            {/* Transcript (if voice) */}
-            {evaluation.transcript && (
-              <div className="p-3 bg-slate-50 rounded-lg">
-                <span className="text-xs font-medium text-slate-500 uppercase">Transcript</span>
-                <p className="text-sm text-slate-700 mt-1">{evaluation.transcript}</p>
-              </div>
-            )}
-
-            {/* Feedback */}
-            {evaluation.feedback && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <span className="text-xs font-medium text-blue-600 uppercase">Feedback</span>
-                <p className="text-sm text-blue-800 mt-1">{evaluation.feedback}</p>
-              </div>
-            )}
-
-            {/* Missed Points */}
-            {evaluation.missed?.length > 0 && (
-              <div className="p-3 bg-red-50 rounded-lg">
-                <span className="text-xs font-medium text-red-600 uppercase">Missed Points</span>
-                <ul className="list-disc list-inside text-sm text-red-800 mt-1 space-y-1">
-                  {evaluation.missed.map((m, i) => (
-                    <li key={i}>{m}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Model Answer */}
-            {evaluation.modelAnswer && (
-              <details className="cursor-pointer">
-                <summary className="text-sm text-slate-600 font-medium flex items-center gap-2">
-                  <Eye size={14} />
-                  Model Answer
-                </summary>
-                <p className="mt-2 text-sm text-slate-700 bg-slate-50 rounded-lg p-3">
-                  {evaluation.modelAnswer}
-                </p>
-              </details>
-            )}
-
-            {/* Follow-up */}
-            {evaluation.followUp && (
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <span className="text-xs font-medium text-purple-600 uppercase">Follow-up Question</span>
-                <p className="text-sm text-purple-800 mt-1">{evaluation.followUp}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </Card>
+    <div className="text-center p-3 bg-slate-50 rounded-lg">
+      <div className="text-2xl font-bold text-indigo-600">{value}</div>
+      <div className="text-xs text-slate-500">{label}</div>
+    </div>
   );
 }
 
-/** ************ ScorePill Component ************ */
 function ScorePill({ label, value }) {
   const color = value >= 4 ? 'green' : value >= 3 ? 'amber' : 'red';
   return (

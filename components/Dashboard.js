@@ -11,7 +11,9 @@ export default function Dashboard({ go }) {
   const soon = companies.filter((c) => { const h = (new Date(c.deadline) - Date.now()) / 36e5; return h >= 0 && h <= 168; })
     .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
   const score = profile ? readiness(profile, companies) : null;
-  const stat = (label, v, sub) => (<Card className="p-4 sm:p-5"><p className="text-sm text-slate-500">{label}</p><p className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-1">{v ?? '–'}</p><p className="text-xs text-slate-400 mt-1">{sub}</p></Card>);
+  // The `sub` line is slate-500, not slate-400: on a white card slate-400 is only ~2.6:1,
+  // which fails WCAG AA and was the one accessibility failure Lighthouse found here.
+  const stat = (label, v, sub) => (<Card className="p-4 sm:p-5"><p className="text-sm text-slate-500">{label}</p><p className="text-2xl sm:text-3xl font-semibold text-slate-900 mt-1">{v ?? '–'}</p><p className="text-xs text-slate-500 mt-1">{sub}</p></Card>);
   return (
     <>
       <Title t="Dashboard" s="Where you stand right now. Numbers are only as good as your parsed profile." />

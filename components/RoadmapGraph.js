@@ -7,9 +7,15 @@ const CW = 1120;                 // canvas width
 const CX = CW / 2;               // spine x
 const SPINE_W = 220, BR_W = 240; // node widths
 const BH = 60, NOTE_H = 88;      // node heights
-const BAN_W = 420, BAN_H = 96;   // stage banner
+const BAN_W = 400, BAN_H = 96;   // stage banner
+// Board width must fit three columns plus both branch gaps with margin:
+// spine 220 + 2×(branch 240 + gap 26) + 2×margin 32 = 1096 → round to 1120.
 const ROW_GAP = 46, STAGE_GAP = 68, PAD_T = 40, PAD_B = 70;
-const LEFT_X = 36, RIGHT_X = CW - 36 - BR_W;
+// Branch columns hug the spine: a short connector reads as connected, a long
+// one reads as a line to nowhere.
+const BR_GAP = 26;                        // horizontal gap between spine edge and branch
+const LEFT_X = CX - SPINE_W / 2 - BR_GAP - BR_W;
+const RIGHT_X = CX + SPINE_W / 2 + BR_GAP;
 const CENTER_X = CX - SPINE_W / 2;
 
 // Split a stage's nodes into rows: skills (or tasks when a stage has none) run
@@ -35,7 +41,7 @@ function rowsFor(nodes) {
 
 // Horizontal S-curve used for every branch wire.
 const curve = (x1, y1, x2, y2) => {
-  const dx = Math.max(40, Math.abs(x2 - x1) * 0.5);
+  const dx = Math.max(28, Math.abs(x2 - x1) * 0.5);
   const s = x2 < x1 ? -1 : 1;
   return `M ${x1} ${y1} C ${x1 + dx * s} ${y1}, ${x2 - dx * s} ${y2}, ${x2} ${y2}`;
 };
@@ -46,7 +52,9 @@ function layout(stages) {
   for (const st of stages) {
     stageTop[st.key] = y;
     boxes.push({ type: 'banner', stage: st, id: `b:${st.key}`, x: CX - BAN_W / 2, y, w: BAN_W, h: BAN_H });
-    let spineY = y + BAN_H;            // where the vertical wire starts (banner bottom)
+    const spineTop = y + BAN_H;          // the spine starts under the stage banner
+    const branches = [];
+    let spineBottom = spineTop;
     y += BAN_H + ROW_GAP;
     for (const row of rowsFor(st.nodes)) {
       const hs = [BH];
@@ -64,16 +72,27 @@ function layout(stages) {
       const l = row.left ? put(row.left, LEFT_X, BR_W) : null;
       const r = row.right ? put(row.right, RIGHT_X, BR_W) : null;
 
-      if (c) { wires.push({ type: 'spine', d: `M ${CX} ${spineY} L ${CX} ${c.y}` }); spineY = c.y + c.h; }
-      const fromX = c ? c.x : CX, fromXr = c ? c.x + c.w : CX;
-      const fromY = c ? c.y + c.h / 2 : y + rowH / 2;
-      // Rows with no spine box: split the two anchors vertically so the branch
-      // wires don't read as one line straight across the whole board.
-      if (l) wires.push({ type: 'branch', d: curve(fromX, c ? fromY : fromY - 14, l.x + l.w, l.y + l.h / 2) });
-      if (r) wires.push({ type: 'branch', d: curve(fromXr, c ? fromY : fromY + 14, r.x, r.y + r.h / 2) });
-
+      if (c) {
+        // Branch wires leave the spine box's own edges, so node → node is obvious.
+        const my = c.y + c.h / 2;
+        if (l) branches.push({ type: 'branch', d: curve(c.x, my, l.x + l.w, l.y + l.h / 2) });
+        if (r) branches.push({ type: 'branch', d: curve(c.x + c.w, my, r.x, r.y + r.h / 2) });
+      } else {
+        // No spine box on this row: tee the branch(es) off the spine itself at
+        // this row's midpoint, so the wire keeps going instead of stopping in
+        // mid-air.
+        const my = y + rowH / 2;
+        if (l) branches.push({ type: 'branch', d: curve(CX, my, l.x + l.w, l.y + l.h / 2) });
+        if (r) branches.push({ type: 'branch', d: curve(CX, my, r.x, r.y + r.h / 2) });
+        if (l || r) branches.push({ type: 'tee', x: CX, y: my });
+      }
+      spineBottom = Math.max(spineBottom, y + rowH);
       y += rowH + ROW_GAP;
     }
+    // One unbroken spine per stage, drawn behind the boxes (they paint over it),
+    // so consecutive topics read as a single connected chain.
+    wires.push({ type: 'spine', d: `M ${CX} ${spineTop} L ${CX} ${spineBottom}` });
+    wires.push(...branches);
     y += STAGE_GAP - ROW_GAP;
   }
   return { boxes, wires, height: y + PAD_B - ROW_GAP, stageTop };
@@ -403,11 +422,14 @@ export default function RoadmapGraph({ stages, isDone, onToggle, onOpenNode, onO
         {/* wires first so every box paints above them */}
         <svg width={CW} height={lay.height} className="absolute inset-0 pointer-events-none">
           {lay.wires.map((w, i) => (
-            <path key={i} d={w.d} fill="none"
-              stroke={w.type === 'spine' ? '#2563eb' : '#93c5fd'}
-              strokeWidth={w.type === 'spine' ? 2.5 : 1.6}
-              strokeDasharray={w.type === 'spine' ? undefined : '1 7'}
-              strokeLinecap="round" />
+            w.type === 'tee'
+              // small dot where a branch leaves a spine segment
+              ? <circle key={i} cx={w.x} cy={w.y} r={3.5} fill="#93c5fd" />
+              : <path key={i} d={w.d} fill="none"
+                stroke={w.type === 'spine' ? '#2563eb' : '#93c5fd'}
+                strokeWidth={w.type === 'spine' ? 2.5 : 1.6}
+                strokeDasharray={w.type === 'spine' ? undefined : '1 7'}
+                strokeLinecap="round" />
           ))}
         </svg>
 

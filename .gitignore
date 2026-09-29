@@ -19,7 +19,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # Env files
+# `.env*` also matches .env.example, which is the only one meant to be committed:
+# the template is useless to the next person if it isn't in the repo.
 .env*
+!.env.example
 
 # Vercel
 .vercel

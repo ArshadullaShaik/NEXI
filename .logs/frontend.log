@@ -1,0 +1,318 @@
+
+> dev
+> next dev
+
+  ▲ Next.js 14.2.15
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 14.9s
+ ○ Compiling / ...
+ ✓ Compiled / in 47.1s (782 modules)
+TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:644:9)
+    at process.processTimers (node:internal/timers:618:7)
+TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:644:9)
+    at process.processTimers (node:internal/timers:618:7)
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+digest: "4047130226"
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+digest: "585360369"
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+digest: "4047130226"
+TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:644:9)
+    at process.processTimers (node:internal/timers:618:7) {
+  page: '/'
+}
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:644:9)
+    at process.processTimers (node:internal/timers:618:7) {
+  page: '/'
+}
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582) {
+  page: '/'
+}
+ ○ Compiling /_error ...
+TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582)
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+digest: "585360369"
+ ⨯ TypeError: e[o] is not a function
+    at Object.t [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:1:127)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:16:18669)
+    at I (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94362)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:96668
+    at F._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:97106)
+    at JSON.parse (<anonymous>)
+    at O (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:94083)
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:100582) {
+  page: '/'
+}
+ GET / 500 in 9842ms
+ GET / 500 in 71292ms
+ ✓ Compiled /_error in 59s (1008 modules)
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+digest: "2370145837"
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+digest: "2370145837"
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+ GET / 500 in 4096ms
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+digest: "2370145837"
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+ GET / 500 in 276ms
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+digest: "2370145837"
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+ GET / 500 in 56ms
+TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458)
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+digest: "2370145837"
+ ⨯ TypeError: __webpack_modules__[moduleId] is not a function
+    at Object.__webpack_require__ [as require] (/Users/harshitmac/Desktop/GDG Solution/.next/server/webpack-runtime.js:33:42)
+    at require (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:19918)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108279
+    at eo (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108464)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:110693
+    at Object._fromJSON (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:111249)
+    at JSON.parse (<anonymous>)
+    at eu (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108958)
+    at en (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:108026)
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115168
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115185
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115218
+    at /Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115235
+    at t (/Users/harshitmac/Desktop/GDG Solution/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:115458) {
+  page: '/'
+}
+ GET / 500 in 197ms
+ ○ Compiling /signup ...
+ ✓ Compiled /signup in 10.6s (1010 modules)
+ GET / 200 in 6882ms
+ GET / 200 in 378ms
+ GET / 200 in 55ms
+ GET / 200 in 79ms
+ GET / 200 in 71ms
+ GET / 200 in 24ms
+ GET / 200 in 45ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 3.3s (1011 modules)
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 3772ms
+ GET / 200 in 191ms
+ GET / 200 in 53ms
+ GET / 200 in 355ms
+ GET /signup 200 in 90ms
+ GET /signup 200 in 52ms
+ GET /signup 200 in 796ms
+[?25h

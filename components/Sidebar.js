@@ -1,22 +1,24 @@
 'use client';
-import { LayoutDashboard, FileText, Route, CalendarClock, MessagesSquare, Database, Target } from 'lucide-react';
+import { LayoutDashboard, FileText, Route, CalendarClock, MessagesSquare, Target, Share2 } from 'lucide-react';
 export const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'resume', label: 'Resume & Matcher', icon: FileText },
   { id: 'roadmap', label: 'Skill-Gap Roadmap', icon: Route },
   { id: 'deadlines', label: 'Deadline Tracker', icon: CalendarClock },
   { id: 'interview', label: 'Mock Interview', icon: MessagesSquare },
-  { id: 'admin', label: 'Admin Data Feed', icon: Database },
+  { id: 'share', label: 'Share Experience', icon: Share2 },
 ];
 export default function Sidebar({ tab, setTab }) {
   return (
     // Phone/tablet: sticky top bar with a horizontally scrollable tab strip.
     // Desktop (md+): sticky left rail, unchanged.
     <aside className="sticky top-0 z-40 bg-slate-900 text-slate-300 shrink-0 md:w-60 md:min-h-screen md:top-0 md:h-screen print:hidden">
-      <div className="hidden md:flex items-center gap-2 px-5 py-5 text-white font-semibold"><Target size={20} className="text-indigo-400" />Placement Copilot</div>
+      <div className="hidden md:flex items-center gap-2 px-5 py-5 text-white font-semibold shrink-0"><Target size={20} className="text-indigo-400" />Placement Copilot</div>
 
       <div className="relative md:static">
-        <nav className="no-sb flex md:flex-col gap-1 p-2 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* md:overflow-y-auto — the rail is h-screen and fixed, so without it a nav that
+            outgrows the viewport (small laptop, browser chrome open) is simply unreachable. */}
+        <nav className="no-sb flex md:flex-col md:overflow-y-auto gap-1 p-2 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <span className="flex md:hidden shrink-0 items-center gap-1.5 pr-2.5 mr-1 text-white font-semibold text-sm border-r border-slate-700"><Target size={16} className="text-indigo-400" />Copilot</span>
           {NAV.map(({ id, label, icon: I }) => (
             <button key={id} onClick={() => setTab(id)} aria-current={tab === id ? 'page' : undefined}

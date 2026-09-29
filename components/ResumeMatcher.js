@@ -1,19 +1,19 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { UploadCloud, Sparkles, Loader2, FileUp, X, Plus, CheckCircle2, AlertTriangle, Camera, RotateCcw, Share2, Trash2 } from 'lucide-react';
+import { UploadCloud, Sparkles, Loader2, FileUp, X, Plus, CheckCircle2, AlertTriangle, Camera, RotateCcw, Share2, Trash2, Building2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { parseResume, evaluate, SKILLS } from '@/lib/logic';
 import { extractResumeText } from '@/lib/extractText';
 import { aiConfigured, parseResumeWithAI, mergeAiProfile, getAiKey, setAiKey } from '@/lib/aiParse';
 import { useAccount } from '@/lib/account';
-import { Card, Title, Badge, Empty, inp } from './ui';
+import { Card, Title, Badge, NoCompanies, inp } from './ui';
 
 const MIN_CHARS = 30;
 const ACCEPT = '.pdf,.txt,.text,.md,.markdown,.rtf,.csv';
 
 export default function ResumeMatcher() {
   const { profile, setProfile, companies } = useApp();
-  const { ready: accountReady, user, resumes, saveResume, deleteResume, shareResume } = useAccount();
+  const { ready: accountReady, resumes, saveResume, deleteResume, shareResume } = useAccount();
   const [text, setText] = useState('');
   const [drag, setDrag] = useState(false);
   const [err, setErr] = useState('');
@@ -23,7 +23,12 @@ export default function ResumeMatcher() {
   const [newSkill, setNewSkill] = useState('');
   const [camOpen, setCamOpen] = useState(false);
   const [camErr, setCamErr] = useState('');
-  const [aiKey, setAiKey] = useState('');
+  // The input is `aiKeyInput`, NOT `setAiKey`: the imported `setAiKey` is the persist
+  // function from lib/aiParse, and shadowing it with the useState setter made the "Save key"
+  // button call the setter with the value it already held — a silent no-op that left
+  // `aiConfigured()` false forever and camera scanning permanently dead.
+  const [aiKeyInput, setAiKeyInput] = useState('');
+  const [aiKeySaved, setAiKeySaved] = useState(false);
   const [shot, setShot] = useState(''); // last camera capture, shown as a thumbnail
   const fileRef = useRef(null);
   const videoRef = useRef(null);
@@ -100,7 +105,7 @@ export default function ResumeMatcher() {
       setErr('This browser cannot open the camera (it needs HTTPS or localhost). Upload a photo with “Browse files” instead.');
       return;
     }
-    try { setAiKey(getAiKey()); } catch { setAiKey(''); }
+    try { setAiKeyInput(getAiKey()); } catch { setAiKeyInput(''); }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1920 } }, audio: false,
@@ -247,7 +252,7 @@ export default function ResumeMatcher() {
         {err && <p className="text-sm text-red-600 break-words flex items-start gap-1.5"><AlertTriangle size={14} className="mt-0.5 shrink-0" />{err}</p>}
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             <button onClick={parseNow} disabled={busy}
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-3 sm:py-2 rounded-lg disabled:opacity-50 min-h-[44px]">
               <Sparkles size={16} />Parse Resume
@@ -265,7 +270,7 @@ export default function ResumeMatcher() {
         <Card className="p-4 sm:p-5 mb-6">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-1">
             <h2 className="font-medium">Your saved resumes</h2>
-            <p className="text-xs text-slate-400">{user ? `Saved to ${user.email}` : 'Saved on this device · sign in with Google to use them anywhere'}</p>
+            <p className="text-xs text-slate-400">Saved on this device · stays here until you delete it</p>
           </div>
           {!resumes.length ? (
             <p className="text-sm text-slate-400 leading-relaxed">
@@ -278,7 +283,7 @@ export default function ResumeMatcher() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{r.label}</p>
                     <p className="text-xs text-slate-400 truncate">
-                      {new Date(r.savedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                      {new Date(r.savedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' })}
                       {r.profile?.name ? ` · ${r.profile.name}` : ''}
                       {r.profile?.cgpa != null ? ` · CGPA ${r.profile.cgpa}` : ''}
                       {` · ${r.profile?.skills?.length || 0} skills`}
@@ -331,7 +336,7 @@ export default function ResumeMatcher() {
             <h2 className="font-medium">Company Matcher</h2>
             <p className="text-xs text-slate-500">{eligibleCount} of {companies.length} companies eligible (gates + ≥70% skills)</p>
           </div>
-          {companies.length === 0 ? <Empty text="No companies in the database. Add some in Admin Data Feed." /> : (<>
+          {companies.length === 0 ? <NoCompanies what="matching" icon={Building2} /> : (<>
             {/* Phone / small tablets: one card per company — no sideways table scrolling */}
             <div className="lg:hidden border-t border-slate-100 divide-y divide-slate-100">
               {rows.map(({ c, e }) => (
@@ -395,12 +400,18 @@ export default function ResumeMatcher() {
               <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-2">
                 <p className="text-xs text-slate-600">Paste your AI key to enable scanning. It's saved on this device only.</p>
                 <div className="flex gap-2">
-                  <input type="password" value={aiKey} onChange={(e) => setAiKey(e.target.value)}
+                  <input type="password" value={aiKeyInput} onChange={(e) => { setAiKeyInput(e.target.value); setAiKeySaved(false); }}
                     placeholder="AI key" aria-label="AI key"
                     className={inp + ' flex-1 min-w-0 text-sm'} />
-                  <button type="button" onClick={() => { setAiKey(aiKey); setCamErr(''); }}
+                  <button type="button" onClick={() => {
+                      setAiKey(aiKeyInput);   // the lib/aiParse persist function
+                      setAiKeyInput('');
+                      setAiKeySaved(true);
+                      setCamErr('');
+                    }}
                     className="shrink-0 text-sm font-medium px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white min-h-[44px]">Save key</button>
                 </div>
+                {aiKeySaved && <p role="status" className="text-xs text-emerald-700">Key saved on this device. You can capture now.</p>}
               </div>
             )}
             {camErr && <p className="text-sm text-red-600 break-words flex items-start gap-1.5"><AlertTriangle size={14} className="mt-0.5 shrink-0" />{camErr}</p>}

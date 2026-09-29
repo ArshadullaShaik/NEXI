@@ -49,7 +49,7 @@ const TierBadge = ({ skill }) => {
 function GapCard({ icon: I, tone, title, hint, skills, empty }) {
   const iconTone = tone === 'red' ? 'text-red-600' : 'text-amber-500';
   return (
-    <Card className="p-5">
+    <Card className="p-5 min-w-0">
       <h2 className="font-medium mb-1 flex items-center gap-2"><I size={16} className={iconTone} />{title}</h2>
       <p className="text-xs text-slate-400 mb-3">{hint}</p>
       {skills.length === 0 ? <p className="text-sm text-slate-400">{empty}</p> : (
@@ -57,8 +57,8 @@ function GapCard({ icon: I, tone, title, hint, skills, empty }) {
           {skills.map((s) => (
             <li key={s} className="rounded-lg border border-slate-200/80 bg-slate-50 p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-sm font-semibold text-slate-800">{s}</span>
-                <TierBadge skill={s} />
+                <span className="text-sm font-semibold text-slate-800 min-w-0 truncate">{s}</span>
+                <span className="shrink-0"><TierBadge skill={s} /></span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {(SKILL_META[s]?.resources || [{ label: `${s} docs`, url: `https://www.google.com/search?q=${encodeURIComponent(s + ' documentation tutorial')}` }]).map((r) => (
@@ -208,9 +208,9 @@ export default function Roadmap({ go }) {
 
       <Card className="p-5 mb-6">
         <div className="flex flex-wrap items-end justify-between gap-4 print:hidden">
-          <div className="min-w-[260px]">
+          <div className="w-full sm:min-w-[260px]">
             <p className="text-xs font-medium text-slate-500 mb-1">Target company</p>
-            <select className={inp + ' max-w-sm'} value={c.id} onChange={(x) => setId(x.target.value)}>
+            <select className={inp + ' w-full sm:max-w-sm'} value={c.id} onChange={(x) => setId(x.target.value)}>
               {companies.map((x) => <option key={x.id} value={x.id}>{x.name}: {x.role}</option>)}
             </select>
           </div>

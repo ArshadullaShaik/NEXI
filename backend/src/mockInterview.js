@@ -1,11 +1,10 @@
 // Core logic: question generator + voice answer evaluator + summary.
-// Import these functions in your main project.
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
-// Step 1 (optional): what does the internet say this role usually asks? (Google Search grounding)
+// Step 1 (optional): what does the internet say this role usually asks?
 export async function roleBrief(company) {
   try {
     const r = await ai.models.generateContent({
@@ -84,7 +83,7 @@ const evalSchema = {
   required: ["transcript", "correctness", "depth", "communication", "feedback", "missed", "modelAnswer", "followUp", "weakTopic"],
 };
 
-// Takes a spoken answer (base64 audio). Gemini transcribes AND evaluates in one call.
+// Takes a spoken answer (base64 audio) or typed text. Gemini transcribes AND evaluates in one call.
 export async function evaluateAnswer({ question, audioBase64, mimeType = "audio/webm", textAnswer }) {
   const parts = [{ text: `You are a strict but fair interviewer. Question: "${question.question}"
 Topic: ${question.topic}. A good answer covers: ${JSON.stringify(question.idealPoints || [])}.

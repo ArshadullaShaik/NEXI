@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { evaluate, deadlineBadge, countdownLabel } from '@/lib/logic';
-import { Card, Badge, Empty, statusTone } from './ui';
+import { Card, Badge, Empty, NoCompanies, statusTone } from './ui';
 import { AlertCircle, AlertTriangle, Bookmark, CalendarCheck, CalendarClock, CalendarPlus, Check, CheckCircle2, ChevronDown, Loader2, LogOut, RefreshCw, Search, X } from 'lucide-react';
 import { CLIENT_ID, MAIL_SCOPE, CAL_SCOPE, requestToken, revokeToken, fetchEmail, createDeadlineEvent, calendarLoginUrl, templateUrl } from '@/lib/googleCalendar';
 
@@ -156,9 +156,17 @@ export default function DeadlineTracker({ go }) {
     setNote({ tone: 'ok', text: 'Google disconnected.' });
   };
 
-  // Fallback login: Google's Calendar sign-in shows the account chooser when
-  // signed out, or drops the user straight into their Calendar when signed in.
-  const openLogin = () => {
+  // Tooltip: shows only when user has previously signed in with Google
+  const gcalPersisted = () => !!readLS(GCAL_KEY, null)?.email;
+
+  const openLogin = async () => {
+    if (gcalPersisted()) {
+      // User has previously signed in — open Google Calendar directly
+      window.open(calendarLoginUrl(), '_blank', 'noopener');
+      setNote({ tone: 'ok', text: 'Google Calendar opened — your saved deadlines are ready.' });
+      return;
+    }
+    // No prior sign-in — start the Google account chooser flow
     window.open(calendarLoginUrl(), '_blank', 'noopener');
     setNote({ tone: 'ok', text: 'Google sign-in opened in a new tab — choose the Gmail account you want to use for your deadlines.' });
   };
@@ -300,7 +308,7 @@ export default function DeadlineTracker({ go }) {
         </div>
       </div>
 
-        {companies.length === 0 ? <Empty icon={CalendarClock} text="No deadlines yet. Add companies in Admin Data Feed." /> :
+        {companies.length === 0 ? <NoCompanies what="tracking deadlines" icon={CalendarClock} /> :
           rows.length === 0 ? <Empty icon={CalendarClock} {...emptyFor()} /> : (
             <div className="overflow-x-auto">
             <table className="w-full text-sm">

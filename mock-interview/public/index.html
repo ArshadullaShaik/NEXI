@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Mock Interview</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --radius: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container { max-width: 800px; margin: 0 auto; }
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  header h1 { font-size: 1.75rem; margin-bottom: 4px; }
+  header p { color: var(--muted); font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 1.1rem; margin-bottom: 12px; }
+  label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 4px; }
+  select, button {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    cursor: pointer;
+  }
+  select:focus, button:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  button:hover:not(:disabled) { background: var(--primary-hover); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  button.secondary:hover:not(:disabled) { background: var(--bg); }
+  button.danger { background: var(--danger); }
+  .setup-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .setup-row > div { flex: 1; min-width: 200px; }
+  .question-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .badge-topic { background: #e0e7ff; color: #3730a3; }
+  .badge-campus { background: #fef3c7; color: #92400e; }
+  .badge-source { background: #f1f5f9; color: #475569; }
+  .question-text { font-size: 1.05rem; font-weight: 500; margin-bottom: 16px; }
+  .record-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 1rem;
+  }
+  .record-btn.recording {
+    background: var(--danger);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  .status-msg { font-size: 0.875rem; color: var(--muted); margin-top: 8px; text-align: center; }
+  .status-msg.error { color: var(--danger); }
+  .feedback-section { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .feedback-section h3 { font-size: 0.95rem; margin-bottom: 8px; }
+  .scores { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
+  .score-item { text-align: center; }
+  .score-item .value { font-size: 1.5rem; font-weight: 700; }
+  .score-item .label { font-size: 0.75rem; color: var(--muted); }
+  .feedback-block {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+  }
+  .feedback-block strong { display: block; margin-bottom: 4px; font-size: 0.8rem; text-transform: uppercase; color: var(--muted); }
+  .feedback-block ul { margin-left: 20px; }
+  .followup-section { margin-top: 12px; }
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .report-item { text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px; }
+  .report-item .value { font-size: 1.75rem; font-weight: 700; }
+  .report-item .label { font-size: 0.75rem; color: var(--muted); }
+  .topic-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .hidden { display: none; }
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+  .loading::after { content: "..."; animation: dots 1.5s steps(4) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  .improvement { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; margin-top: 12px; }
+  .improvement.negative { background: #fef2f2; border-color: #fecaca; }
+  .note { font-size: 0.8rem; color: var(--muted); margin-top: 12px; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Voice Mock Interview</h1>
+    <p id="header-info">Loading...</p>
+  </header>
+
+  <!-- Setup Card -->
+  <div class="card" id="setup-card">
+    <h2>Setup</h2>
+    <div class="setup-row">
+      <div>
+        <label for="round-select">Round</label>
+        <select id="round-select" style="width:100%">
+          <option value="baseline">Baseline (start of prep)</option>
+          <option value="final">Final (day before)</option>
+        </select>
+      </div>
+      <div style="flex:0">
+        <button id="start-btn" onclick="startInterview()">Start Interview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="card loading hidden" id="loading">Generating questions</div>
+
+  <!-- Question Card -->
+  <div class="card hidden" id="question-card">
+    <div class="question-meta">
+      <span class="badge badge-source" id="q-number">Question 1 of 5</span>
+      <span class="badge badge-topic" id="q-topic">Topic</span>
+      <span class="badge badge-campus hidden" id="q-campus">Asked at SRM AP</span>
+    </div>
+    <p class="question-text" id="q-text"></p>
+    <button class="secondary" onclick="speakQuestion()" style="margin-bottom:12px">Hear it again</button>
+    <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+      <span id="record-icon">&#127908;</span>
+      <span id="record-text">Tap to record your answer</span>
+    </button>
+    <p class="status-msg" id="record-status"></p>
+
+    <!-- Feedback -->
+    <div class="feedback-section hidden" id="feedback-section">
+      <h3>Feedback</h3>
+      <div class="scores" id="scores"></div>
+      <div id="feedback-blocks"></div>
+      <div class="followup-section hidden" id="followup-section">
+        <div class="feedback-block">
+          <strong>Follow-up Question</strong>
+          <p id="followup-text"></p>
+        </div>
+        <button class="record-btn" id="followup-record-btn" onclick="toggleFollowupRecording()">
+          <span id="followup-record-icon">&#127908;</span>
+          <span id="followup-record-text">Answer the follow-up</span>
+        </button>
+        <p class="status-msg" id="followup-status"></p>
+      </div>
+      <div class="btn-row">
+        <button onclick="nextQuestion()" id="next-btn">Next question</button>
+        <button class="secondary" onclick="showResults()">See results</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Card -->
+  <div class="card hidden" id="report-card">
+    <h2>Interview Report</h2>
+    <div class="report-grid" id="report-grid"></div>
+    <div id="topic-breakdown"></div>
+    <div id="improvement-section"></div>
+    <p class="note">Weak topics should feed the roadmap generator for focused preparation.</p>
+    <div class="btn-row">
+      <button onclick="resetInterview()">Start New Interview</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "";
+let questions = [];
+let currentIndex = 0;
+let answers = [];
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let followupAnswers = [];
+let currentEvaluation = null;
+let baselineSummary = null;
+
+// Load data and check for saved baseline
+async function init() {
+  try {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    document.getElementById("header-info").textContent =
+      `${data.student.name} - ${data.company.name} (${data.company.role})`;
+
+    // Check for saved baseline
+    const saved = localStorage.getItem("baselineSummary");
+    if (saved) {
+      baselineSummary = JSON.parse(saved);
+      document.getElementById("round-select").value = "final";
+    }
+  } catch (e) {
+    document.getElementById("header-info").textContent = "Error loading data";
+  }
+}
+
+// Start interview
+async function startInterview() {
+  const mode = document.getElementById("round-select").value;
+  if (mode === "final" && !baselineSummary) {
+    alert("Please complete a baseline round first.");
+    return;
+  }
+
+  document.getElementById("setup-card").classList.add("hidden");
+  document.getElementById("loading").classList.remove("hidden");
+
+  try {
+    const res = await fetch("/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode, baseline: baselineSummary }),
+    });
+    questions = await res.json();
+    currentIndex = 0;
+    answers = [];
+    followupAnswers = [];
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("question-card").classList.remove("hidden");
+    showQuestion();
+  } catch (e) {
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("setup-card").classList.remove("hidden");
+    alert("Failed to generate questions. Is the server running?");
+  }
+}
+
+// Display current question
+function showQuestion() {
+  const q = questions[currentIndex];
+  document.getElementById("q-number").textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+  document.getElementById("q-topic").textContent = q.topic;
+  document.getElementById("q-text").textContent = q.question;
+
+  const campusBadge = document.getElementById("q-campus");
+  if (q.source === "campus") campusBadge.classList.remove("hidden");
+  else campusBadge.classList.add("hidden");
+
+  document.getElementById("feedback-section").classList.add("hidden");
+  document.getElementById("followup-section").classList.add("hidden");
+  resetRecordButton();
+  speakQuestion();
+}
+
+// Read question aloud
+function speakQuestion() {
+  const q = questions[currentIndex];
+  if (!q) return;
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(q.question);
+  utterance.rate = 0.95;
+  speechSynthesis.speak(utterance);
+}
+
+// Toggle recording
+async function toggleRecording() {
+  if (isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+      stream.getTracks().forEach(t => t.stop());
+      await evaluateAnswer(blob);
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    updateRecordButton(true);
+    document.getElementById("record-status").textContent = "Recording... tap to stop";
+    document.getElementById("record-status").className = "status-msg";
+  } catch (e) {
+    document.getElementById("record-status").textContent =
+      "Microphone blocked. Please allow microphone access and try again.";
+    document.getElementById("record-status").className = "status-msg error";
+  }
+}
+
+// Toggle follow-up recording
+async function toggleFollowupRecording() {
+  if (isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+      stream.getTracks().forEach(t => t.stop());
+      await evaluateFollowup(blob);
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    updateFollowupRecordButton(true);
+    document.getElementById("followup-status").textContent = "Recording... tap to stop";
+    document.getElementById("followup-status").className = "status-msg";
+  } catch (e) {
+    document.getElementById("followup-status").textContent =
+      "Microphone blocked. Please allow microphone access.";
+    document.getElementById("followup-status").className = "status-msg error";
+  }
+}
+
+// Convert blob to base64 and evaluate
+async function evaluateAnswer(blob) {
+  document.getElementById("record-status").textContent = "Transcribing and evaluating...";
+  document.getElementById("record-status").className = "status-msg";
+
+  const base64 = await blobToBase64(blob);
+  const mimeType = blob.type.split(";")[0]; // strip codec params
+
+  try {
+    const res = await fetch("/api/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: questions[currentIndex],
+        audioBase64: base64,
+        mimeType: mimeType,
+      }),
+    });
+    currentEvaluation = await res.json();
+    if (currentEvaluation.error) throw new Error(currentEvaluation.error);
+
+    answers.push({ ...currentEvaluation, question: questions[currentIndex].question, topic: questions[currentIndex].topic });
+    showFeedback(currentEvaluation);
+  } catch (e) {
+    document.getElementById("record-status").textContent = "Error: " + e.message;
+    document.getElementById("record-status").className = "status-msg error";
+  }
+  updateRecordButton(false);
+}
+
+// Evaluate follow-up answer
+async function evaluateFollowup(blob) {
+  document.getElementById("followup-status").textContent = "Transcribing and evaluating...";
+  document.getElementById("followup-status").className = "status-msg";
+
+  const base64 = await blobToBase64(blob);
+  const mimeType = blob.type.split(";")[0];
+
+  try {
+    const res = await fetch("/api/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: { question: currentEvaluation.followUp, topic: currentEvaluation.weakTopic, idealPoints: [] },
+        audioBase64: base64,
+        mimeType: mimeType,
+      }),
+    });
+    const followupEval = await res.json();
+    if (followupEval.error) throw new Error(followupEval.error);
+
+    followupAnswers.push({ ...followupEval, question: currentEvaluation.followUp, topic: currentEvaluation.weakTopic });
+    document.getElementById("followup-status").textContent = "Follow-up answer recorded!";
+    document.getElementById("followup-section").classList.add("hidden");
+  } catch (e) {
+    document.getElementById("followup-status").textContent = "Error: " + e.message;
+    document.getElementById("followup-status").className = "status-msg error";
+  }
+  updateFollowupRecordButton(false);
+}
+
+// Show feedback after evaluation
+function showFeedback(eval) {
+  document.getElementById("feedback-section").classList.remove("hidden");
+
+  // Scores
+  document.getElementById("scores").innerHTML = `
+    <div class="score-item"><div class="value">${eval.correctness}/5</div><div class="label">Correctness</div></div>
+    <div class="score-item"><div class="value">${eval.depth}/5</div><div class="label">Depth</div></div>
+    <div class="score-item"><div class="value">${eval.communication}/5</div><div class="label">Communication</div></div>
+  `;
+
+  // Feedback blocks
+  let blocks = "";
+  blocks += `<div class="feedback-block"><strong>What we heard</strong>${eval.transcript || "(nothing detected)"}</div>`;
+  blocks += `<div class="feedback-block"><strong>Feedback</strong>${eval.feedback}</div>`;
+  if (eval.missed && eval.missed.length) {
+    blocks += `<div class="feedback-block"><strong>Missed Points</strong><ul>${eval.missed.map(m => `<li>${m}</li>`).join("")}</ul></div>`;
+  }
+  blocks += `<div class="feedback-block"><strong>Model Answer</strong>${eval.modelAnswer}</div>`;
+  document.getElementById("feedback-blocks").innerHTML = blocks;
+
+  // Follow-up
+  if (eval.followUp) {
+    document.getElementById("followup-text").textContent = eval.followUp;
+    document.getElementById("followup-section").classList.remove("hidden");
+  }
+
+  // Update next button
+  const nextBtn = document.getElementById("next-btn");
+  if (currentIndex < questions.length - 1) {
+    nextBtn.textContent = "Next question";
+  } else {
+    nextBtn.textContent = "See results";
+  }
+}
+
+// Next question or results
+function nextQuestion() {
+  // Save follow-up answers
+  if (followupAnswers.length) {
+    answers.push(...followupAnswers);
+    followupAnswers = [];
+  }
+
+  currentIndex++;
+  if (currentIndex < questions.length) {
+    showQuestion();
+  } else {
+    showResults();
+  }
+}
+
+// Show final report
+async function showResults() {
+  document.getElementById("question-card").classList.add("hidden");
+  document.getElementById("report-card").classList.remove("hidden");
+
+  const mode = document.getElementById("round-select").value;
+  try {
+    const res = await fetch("/api/summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answers, baselineSummary: mode === "final" ? baselineSummary : null }),
+    });
+    const summary = await res.json();
+    if (summary.error) throw new Error(summary.error);
+
+    // Save baseline
+    if (mode === "baseline") {
+      localStorage.setItem("baselineSummary", JSON.stringify(summary));
+      baselineSummary = summary;
+    }
+
+    // Report grid
+    document.getElementById("report-grid").innerHTML = `
+      <div class="report-item"><div class="value">${summary.overall}</div><div class="label">Overall</div></div>
+      <div class="report-item"><div class="value">${summary.correctness}</div><div class="label">Correctness</div></div>
+      <div class="report-item"><div class="value">${summary.depth}</div><div class="label">Depth</div></div>
+      <div class="report-item"><div class="value">${summary.communication}</div><div class="label">Communication</div></div>
+    `;
+
+    // Topic breakdown
+    let topicHtml = "<h3>Topic Scores</h3><div class='topic-list'>";
+    for (const [topic, score] of Object.entries(summary.topicScores)) {
+      const color = score >= 4 ? "var(--success)" : score >= 3 ? "var(--warning)" : "var(--danger)";
+      topicHtml += `<span class="badge" style="background:${color};color:#fff">${topic}: ${score}</span>`;
+    }
+    topicHtml += "</div>";
+
+    if (summary.weakTopics && summary.weakTopics.length) {
+      topicHtml += "<h3 style='margin-top:12px'>Weak Topics</h3><div class='topic-list'>";
+      summary.weakTopics.forEach(t => {
+        topicHtml += `<span class="badge" style="background:var(--danger);color:#fff">${t}</span>`;
+      });
+      topicHtml += "</div>";
+    }
+    document.getElementById("topic-breakdown").innerHTML = topicHtml;
+
+    // Improvement (final mode)
+    if (mode === "final" && summary.delta !== undefined) {
+      const pos = summary.delta >= 0;
+      document.getElementById("improvement-section").innerHTML = `
+        <div class="improvement ${pos ? "" : "negative"}">
+          <strong>Improvement from baseline: ${pos ? "+" : ""}${summary.delta} points</strong>
+          ${summary.topicDeltas ? "<div class='topic-list'>" +
+            Object.entries(summary.topicDeltas).map(([t, d]) =>
+              `<span class="badge" style="background:${d >= 0 ? "var(--success)" : "var(--danger)"};color:#fff">${t}: ${d >= 0 ? "+" : ""}${d}</span>`
+            ).join("") + "</div>" : ""}
+          ${summary.stillWeak && summary.stillWeak.length ? "<p style='margin-top:8px'><strong>Still weak:</strong> " + summary.stillWeak.join(", ") + "</p>" : ""}
+        </div>
+      `;
+    } else {
+      document.getElementById("improvement-section").innerHTML = "";
+    }
+  } catch (e) {
+    alert("Error generating report: " + e.message);
+  }
+}
+
+// Reset for new interview
+function resetInterview() {
+  document.getElementById("report-card").classList.add("hidden");
+  document.getElementById("setup-card").classList.remove("hidden");
+  document.getElementById("round-select").value = "baseline";
+  speechSynthesis.cancel();
+}
+
+// Helpers
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function updateRecordButton(recording) {
+  const btn = document.getElementById("record-btn");
+  const icon = document.getElementById("record-icon");
+  const text = document.getElementById("record-text");
+  if (recording) {
+    btn.classList.add("recording");
+    icon.textContent = "⏹";
+    text.textContent = "Tap to stop";
+  } else {
+    btn.classList.remove("recording");
+    icon.textContent = "🎤";
+    text.textContent = "Tap to record your answer";
+  }
+}
+
+function updateFollowupRecordButton(recording) {
+  const btn = document.getElementById("followup-record-btn");
+  const icon = document.getElementById("followup-record-icon");
+  const text = document.getElementById("followup-record-text");
+  if (recording) {
+    btn.classList.add("recording");
+    icon.textContent = "⏹";
+    text.textContent = "Tap to stop";
+  } else {
+    btn.classList.remove("recording");
+    icon.textContent = "🎤";
+    text.textContent = "Answer the follow-up";
+  }
+}
+
+function resetRecordButton() {
+  updateRecordButton(false);
+  document.getElementById("record-status").textContent = "";
+  document.getElementById("record-status").className = "status-msg";
+}
+
+// Initialize
+init();
+</script>
+</body>
+</html>
