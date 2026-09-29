@@ -2,102 +2,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Plus, Minus, Maximize2, Minimize2, Frame, Lightbulb, ExternalLink } from 'lucide-react';
 
-// ---- canvas geometry (all px, so wiring is exact — no measuring/relayout) -----
-const CW = 1120;                 // canvas width
-const CX = CW / 2;               // spine x
-const SPINE_W = 220, BR_W = 240; // node widths
-const BH = 60, NOTE_H = 88;      // node heights
-const BAN_W = 400, BAN_H = 96;   // stage banner
-// Board width must fit three columns plus both branch gaps with margin:
-// spine 220 + 2×(branch 240 + gap 26) + 2×margin 32 = 1096 → round to 1120.
-const ROW_GAP = 46, STAGE_GAP = 68, PAD_T = 40, PAD_B = 70;
-// Branch columns hug the spine: a short connector reads as connected, a long
-// one reads as a line to nowhere.
-const BR_GAP = 26;                        // horizontal gap between spine edge and branch
-const LEFT_X = CX - SPINE_W / 2 - BR_GAP - BR_W;
-const RIGHT_X = CX + SPINE_W / 2 + BR_GAP;
-const CENTER_X = CX - SPINE_W / 2;
+// Board geometry + layout live in lib/roadmapLayout.js: pure, testable code, and
+// a fixed-size canvas so connectors are computed exactly instead of measured.
+import { layout, CW, CX, LEFT_X, RIGHT_X, CENTER_X } from '@/lib/roadmapLayout';
 
 // Split a stage's nodes into rows: skills (or tasks when a stage has none) run
 // down the spine, tasks/notes fan off left and right like roadmap.sh branches.
-function rowsFor(nodes) {
-  const rows = [];
-  const hasSkill = nodes.some((n) => n.type === 'skill');
-  let cursor = 'left';
-  const place = (n) => {
-    const last = rows[rows.length - 1];
-    const other = cursor === 'left' ? 'right' : 'left';
-    if (last && last[cursor] === undefined) last[cursor] = n;
-    else if (last && last[other] === undefined) last[other] = n;
-    else rows.push({ [cursor]: n });
-    cursor = other;
-  };
-  for (const n of nodes) {
-    if (n.type === 'skill' || (!hasSkill && n.type === 'task')) rows.push({ center: n });
-    else place(n);
-  }
-  return rows;
-}
-
-// Horizontal S-curve used for every branch wire.
-const curve = (x1, y1, x2, y2) => {
-  const dx = Math.max(28, Math.abs(x2 - x1) * 0.5);
-  const s = x2 < x1 ? -1 : 1;
-  return `M ${x1} ${y1} C ${x1 + dx * s} ${y1}, ${x2 - dx * s} ${y2}, ${x2} ${y2}`;
-};
-
-function layout(stages) {
-  const boxes = [], wires = [], stageTop = {};
-  let y = PAD_T;
-  for (const st of stages) {
-    stageTop[st.key] = y;
-    boxes.push({ type: 'banner', stage: st, id: `b:${st.key}`, x: CX - BAN_W / 2, y, w: BAN_W, h: BAN_H });
-    const spineTop = y + BAN_H;          // the spine starts under the stage banner
-    const branches = [];
-    let spineBottom = spineTop;
-    y += BAN_H + ROW_GAP;
-    for (const row of rowsFor(st.nodes)) {
-      const hs = [BH];
-      if (row.center) hs.push(BH);
-      if (row.left) hs.push(row.left.type === 'note' ? NOTE_H : BH);
-      if (row.right) hs.push(row.right.type === 'note' ? NOTE_H : BH);
-      const rowH = Math.max(...hs);
-      const put = (n, x, w) => {
-        const h = n.type === 'note' ? NOTE_H : BH;
-        const top = y + (rowH - h) / 2;
-        boxes.push({ type: 'node', node: n, stage: st, id: n.id, x, y: top, w, h });
-        return { x, y: top, w, h };
-      };
-      const c = row.center ? put(row.center, CENTER_X, SPINE_W) : null;
-      const l = row.left ? put(row.left, LEFT_X, BR_W) : null;
-      const r = row.right ? put(row.right, RIGHT_X, BR_W) : null;
-
-      if (c) {
-        // Branch wires leave the spine box's own edges, so node → node is obvious.
-        const my = c.y + c.h / 2;
-        if (l) branches.push({ type: 'branch', d: curve(c.x, my, l.x + l.w, l.y + l.h / 2) });
-        if (r) branches.push({ type: 'branch', d: curve(c.x + c.w, my, r.x, r.y + r.h / 2) });
-      } else {
-        // No spine box on this row: tee the branch(es) off the spine itself at
-        // this row's midpoint, so the wire keeps going instead of stopping in
-        // mid-air.
-        const my = y + rowH / 2;
-        if (l) branches.push({ type: 'branch', d: curve(CX, my, l.x + l.w, l.y + l.h / 2) });
-        if (r) branches.push({ type: 'branch', d: curve(CX, my, r.x, r.y + r.h / 2) });
-        if (l || r) branches.push({ type: 'tee', x: CX, y: my });
-      }
-      spineBottom = Math.max(spineBottom, y + rowH);
-      y += rowH + ROW_GAP;
-    }
-    // One unbroken spine per stage, drawn behind the boxes (they paint over it),
-    // so consecutive topics read as a single connected chain.
-    wires.push({ type: 'spine', d: `M ${CX} ${spineTop} L ${CX} ${spineBottom}` });
-    wires.push(...branches);
-    y += STAGE_GAP - ROW_GAP;
-  }
-  return { boxes, wires, height: y + PAD_B - ROW_GAP, stageTop };
-}
-
 const clamp2 = 'clamp2', clamp1 = 'clamp1', clamp3 = 'clamp3';
 
 function GraphNode({ b, isDone, onToggle, onOpen }) {
@@ -405,8 +315,28 @@ export default function RoadmapGraph({ stages, isDone, onToggle, onOpenNode, onO
 
   const btn = 'w-8 h-8 rounded-md border border-slate-300 bg-white/95 shadow-sm flex items-center justify-center text-slate-600 hover:text-slate-900 hover:border-slate-500 transition';
 
+  // Legend sits above the board rather than inside it: inside, it collided with
+  // the first stage banner and got clipped as soon as the board was panned.
+  const legend = (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600 mb-2 print:hidden">
+      <span className="font-semibold uppercase tracking-wider text-slate-400 text-[10px]">How to read</span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-3.5 h-3.5 rounded-full bg-violet-600 inline-flex items-center justify-center"><Check size={9} strokeWidth={4} className="text-white" /></span>
+        Done — ticked off
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-3.5 h-3.5 rounded-full border border-slate-400 bg-white inline-block" />Not started — click a box for its resources
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="w-3.5 h-3 rounded-sm bg-amber-300 border border-slate-900 inline-block" />Topic to learn
+      </span>
+    </div>
+  );
+
   return (
-    <div ref={boxRef} tabIndex={0}
+    <>
+      {legend}
+      <div ref={boxRef} tabIndex={0}
       className={`rm-viewport overflow-hidden bg-white touch-none select-none cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400
         ${full ? 'fixed inset-0 z-50 w-screen h-[100dvh] rounded-none border-0'
           : 'relative rounded-xl border border-slate-300 h-[70vh] min-h-[420px] md:h-[660px]'}`}
@@ -433,22 +363,6 @@ export default function RoadmapGraph({ stages, isDone, onToggle, onOpenNode, onO
           ))}
         </svg>
 
-        {/* legend */}
-        <div className="absolute rounded-lg border border-slate-300 bg-white/95 px-3 py-2 space-y-1 shadow-sm"
-          style={{ left: LEFT_X, top: PAD_T, width: 252 }}>
-          <p className="text-[9px] font-bold uppercase tracking-[.12em] text-slate-500">How to read</p>
-          <p className="flex items-center gap-2 text-[10px] text-slate-600">
-            <span className="w-3.5 h-3.5 rounded-full bg-violet-600 inline-flex items-center justify-center"><Check size={9} strokeWidth={4} className="text-white" /></span>
-            Done — ticked off
-          </p>
-          <p className="flex items-center gap-2 text-[10px] text-slate-600">
-            <span className="w-3.5 h-3.5 rounded-full border border-slate-400 bg-white inline-block" />Not started — click a box for resources
-          </p>
-          <p className="flex items-center gap-2 text-[10px] text-slate-600">
-            <span className="w-3.5 h-3 rounded-sm bg-amber-300 border border-slate-900 inline-block" />Topic to learn
-          </p>
-        </div>
-
         {lay.boxes.map((b) => (b.type === 'banner'
           ? <StageBanner key={b.id} b={b} onOpen={onOpenStage} onToggle={onToggle} />
           : <GraphNode key={b.id} b={b} isDone={isDone} onToggle={onToggle} onOpen={onOpenNode} />))}
@@ -467,8 +381,9 @@ export default function RoadmapGraph({ stages, isDone, onToggle, onOpenNode, onO
       </div>
       <div className="rm-controls absolute bottom-3 left-3 z-10 text-[10px] text-slate-500 bg-white/90 border border-slate-200 rounded-full px-2.5 py-1 print:hidden">
         <span className="sm:hidden">Drag to pan · pinch to zoom</span>
-        <span className="hidden sm:inline">Drag or arrow keys to pan · + − 0 to zoom · ctrl-scroll to zoom</span>
+        <span className="hidden sm:inline">Controls</span>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

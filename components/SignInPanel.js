@@ -34,7 +34,7 @@ const SIGNUP_STEPS = [
 ];
 
 /** mode: 'signin' | 'signup' */
-export default function SignInPanel({ mode = 'signin' }) {
+export default function SignInPanel({ mode = 'signin', serverProjectId = '' }) {
   const { user, ready, configured, error, signIn, signOut } = useAuth();
   const { profile, setProfile } = useApp();
   const router = useRouter();
@@ -55,25 +55,75 @@ export default function SignInPanel({ mode = 'signin' }) {
     } finally { setBusy(false); }
   }
 
-  // --- Not configured: say so instead of offering a button that cannot work ----------
-  if (ready && !configured) {
+  // --- Not configured: name the exact values still needed ------------------------
+  // This screen is read by whoever is deploying, and the previous version of it just said
+  // "add the NEXT_PUBLIC_FIREBASE_* variables" — which is not an instruction anyone can act
+  // on without already knowing what they are. When the server-side service account is
+  // present we know the project id, so two of the four values can be stated outright and the
+  // console click-path can be named.
+  // This branch keys off `configured` alone, deliberately not `ready && !configured`. Whether
+  // Firebase is configured is known on the very first render, so gating it on the auth check
+  // only produced a flash of the sign-in button — stuck on "Checking sign-in…" — before the
+  // real explanation replaced it.
+  if (!configured) {
     return (
       <Shell mode={mode}>
         <Card className="p-7">
           <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-500 grid place-items-center mb-4">
             <ShieldAlert size={20} />
           </div>
-          <h1 className="text-lg font-semibold text-slate-900">Sign-in isn’t set up yet</h1>
+          <h1 className="text-lg font-semibold text-slate-900">Sign-in needs the web app config</h1>
           <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-            This deployment has no Firebase project attached, so there are no accounts to sign in to.
-            <b className="text-slate-800"> The app works fully without one</b> — resumes, roadmaps and
+            The database side is already connected{serverProjectId ? <> to <b className="text-slate-800 font-mono text-[13px]">{serverProjectId}</b></> : ''},
+            but browser sign-in is a separate credential and is not set up yet.
+            <b className="text-slate-800"> The app works fully without it</b> — resumes, roadmaps and
             deadlines all run on this device.
           </p>
-          <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-            To switch it on, add the <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[13px] font-mono">NEXT_PUBLIC_FIREBASE_*</code>{' '}
-            variables from <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[13px] font-mono">.env.example</code>{' '}
-            and restart the dev server.
-          </p>
+
+          <ol className="mt-5 space-y-3 text-sm text-slate-600">
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold grid place-items-center">1</span>
+              <span>
+                In the Firebase console, open{' '}
+                <b className="text-slate-800">Project settings → Your apps</b> and add a{' '}
+                <b className="text-slate-800">Web app</b> (or copy the config of the existing one).
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold grid place-items-center">2</span>
+              <span>
+                Under <b className="text-slate-800">Authentication → Sign-in method</b>, enable{' '}
+                <b className="text-slate-800">Google</b>.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold grid place-items-center">3</span>
+              <span>
+                Add <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[13px] font-mono">localhost</code> to{' '}
+                <b className="text-slate-800">Authorized domains</b>.
+              </span>
+            </li>
+            <li className="flex gap-3">
+              <span className="shrink-0 h-6 w-6 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold grid place-items-center">4</span>
+              <span>
+                Put the four values in <code className="bg-slate-100 px-1.5 py-0.5 rounded text-[13px] font-mono">.env.local</code> and restart.
+              </span>
+            </li>
+          </ol>
+
+          <div className="mt-5 rounded-lg bg-slate-50 border border-slate-200 p-3.5">
+            <p className="text-xs font-medium text-slate-600 mb-2 font-mono leading-relaxed">
+              NEXT_PUBLIC_FIREBASE_API_KEY=…<br />
+              NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN={serverProjectId ? `${serverProjectId}.firebaseapp.com` : '….firebaseapp.com'}<br />
+              NEXT_PUBLIC_FIREBASE_PROJECT_ID={serverProjectId || '…'}<br />
+              NEXT_PUBLIC_FIREBASE_APP_ID=…
+            </p>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              A service-account key does <b>not</b> cover this — it is the server credential. The
+              web app config is the one under “SDK setup and configuration”.
+            </p>
+          </div>
+
           <Link href="/" className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:underline">
             Continue without an account <ArrowRight size={14} />
           </Link>
