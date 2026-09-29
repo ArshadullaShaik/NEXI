@@ -1,0 +1,8 @@
+[
+ {"company":"Alpha Tech","role":"Software Engineer","package":"5 LPA","eligibleBranches":["CSE","ECE","IT"],"minCgpa":7.0,"maxBacklogs":0,"requiredSkills":["Python"],"rounds":["Aptitude","Technical","HR"],"deadline":"2026-10-10"},
+ {"company":"Beta Soft","role":"Software Engineer","package":"6 LPA","eligibleBranches":["CSE","ECE","IT"],"minCgpa":7.5,"maxBacklogs":0,"requiredSkills":["SQL"],"rounds":["Aptitude","Technical","HR"],"deadline":"2026-10-12"},
+ {"company":"Gamma Systems","role":"Software Engineer","package":"7 LPA","eligibleBranches":["CSE","ECE"],"minCgpa":7.0,"maxBacklogs":1,"requiredSkills":["SQL","Python"],"rounds":["Technical","HR"],"deadline":"2026-10-15"},
+ {"company":"Delta Labs","role":"Developer","package":"8 LPA","eligibleBranches":["CSE","IT"],"minCgpa":7.0,"maxBacklogs":0,"requiredSkills":["DSA"],"rounds":["Coding","Technical","HR"],"deadline":"2026-10-18"},
+ {"company":"Epsilon Data","role":"Data Analyst","package":"6 LPA","eligibleBranches":["ECE","CSE"],"minCgpa":7.0,"maxBacklogs":0,"requiredSkills":["SQL"],"rounds":["Aptitude","Technical"],"deadline":"2026-10-20"},
+ {"company":"Zeta Corp","role":"Software Engineer","package":"12 LPA","eligibleBranches":["CSE","ECE"],"minCgpa":8.0,"maxBacklogs":0,"requiredSkills":["SQL","DSA"],"rounds":["Coding","Technical","HR"],"deadline":"2026-10-25"}
+]

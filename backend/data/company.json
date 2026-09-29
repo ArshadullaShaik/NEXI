@@ -1,0 +1,7 @@
+{
+  "name": "Google",
+  "role": "SDE Intern",
+  "package": "N/A",
+  "rounds": ["Aptitude", "Technical", "HR"],
+  "requiredSkills": ["C++", "DSA", "System Design", "Python"]
+}

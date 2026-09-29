@@ -1,0 +1,36 @@
+[
+  {
+    "company": "Google",
+    "role": "SDE Intern",
+    "year": 2025,
+    "outcome": "Selected",
+    "rounds": [
+      { "type": "Technical", "questions": ["Reverse a linked list", "Binary search on answer", "Explain your project"], "notes": "DSA heavy, one project deep-dive" },
+      { "type": "HR", "questions": ["Why Google?", "Tell me about a time you worked in a team"], "notes": "Friendly, 15 minutes" }
+    ],
+    "difficulty": 4,
+    "tip": "Practice DSA daily and be ready to explain every line of your project"
+  },
+  {
+    "company": "Microsoft",
+    "role": "Software Engineer",
+    "year": 2025,
+    "outcome": "Selected",
+    "rounds": [
+      { "type": "Technical", "questions": ["Design a parking lot", "SQL query for second highest salary", "OOP concepts"], "notes": "Mix of DSA, system design, and fundamentals" }
+    ],
+    "difficulty": 3,
+    "tip": "Focus on clean code and communication"
+  },
+  {
+    "company": "Amazon",
+    "role": "SDE-1",
+    "year": 2024,
+    "outcome": "Selected",
+    "rounds": [
+      { "type": "Technical", "questions": ["Two sum variant", "Leadership principles", "System design basics"], "notes": "LP questions are important" }
+    ],
+    "difficulty": 3,
+    "tip": "Prepare STAR stories for each leadership principle"
+  }
+]

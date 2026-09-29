@@ -1,0 +1,6 @@
+{ "name": "Ravi", "branch": "ECE", "year": 3, "cgpa": 7.6, "backlogs": 0,
+  "skills": ["Python", "C", "Arduino"],
+  "projects": [
+    { "title": "Weather app", "description": "Python + Flask app showing live weather, stores search history in Firebase Firestore" },
+    { "title": "Smart plant watering", "description": "Arduino with soil sensor and relay, automatic watering" } ],
+  "skillGaps": ["SQL", "DSA"] }

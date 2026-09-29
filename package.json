@@ -5,6 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "backend": "node backend/server.js",
     "postinstall": "node scripts/copy-pdf-worker.js"
   },
   "dependencies": {

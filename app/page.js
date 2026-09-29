@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div className="min-h-screen md:flex">
       <Sidebar tab={tab} setTab={setTab} />
-      <main className="flex-1 p-4 md:p-8 max-w-6xl w-full mx-auto print:p-0">
+      <main className="flex-1 px-4 py-5 md:px-8 md:py-8 max-w-6xl w-full mx-auto min-w-0 print:p-0">
         {ready ? <View go={setTab} /> : <p className="text-slate-400 text-sm">Loading…</p>}
       </main>
     </div>

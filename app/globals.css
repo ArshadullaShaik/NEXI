@@ -1,10 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body{background:#f8fafc;color:#0f172a}
+body{background:#f8fafc;color:#0f172a;-webkit-text-size-adjust:100%}
+/* Horizontal scrollers (mobile tab strip, wide tables) without ugly scrollbars */
+.no-sb{scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain}
+.no-sb::-webkit-scrollbar{display:none}
 /* Export Roadmap as PDF: browsers drop background colors by default, so keep them. */
 @media print{
   html,body{background:#fff}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @page{margin:12mm}
+}
+
+/* Multi-line clamp used by the roadmap canvas boxes (kept out of Tailwind so
+   the fixed box heights always match the text they can show). */
+.clamp1,.clamp2,.clamp3{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.clamp1{-webkit-line-clamp:1}
+.clamp2{-webkit-line-clamp:2}
+.clamp3{-webkit-line-clamp:3}
+
+/* Roadmap canvas in real fullscreen: fill the screen, drop the frame. */
+.rm-viewport:fullscreen{width:100vw!important;height:100vh!important;border:0!important;border-radius:0!important;background:#fff}
+
+/* Roadmap canvas on paper: unclip the viewport and scale the fixed 1120px
+   board down to page width (0.66 × 1120 ≈ 740px ≈ A4 text width). */
+@media print{
+  .rm-viewport{height:auto!important;min-height:0!important;overflow:visible!important;border:0!important;cursor:auto!important}
+  .rm-stage{transform:scale(.66)!important;transform-origin:top left!important;transition:none!important}
+  .rm-controls{display:none!important}
 }
